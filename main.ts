@@ -34,12 +34,14 @@ function ICON表示 (No: number) {
     }
 }
 input.onGesture(Gesture.Shake, function () {
+    受信文字列 = ""
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    pins.digitalWritePin(DigitalPin.P2, 0)
     ICON表示(モード)
 })
 input.onSound(DetectedSound.Loud, function () {
     if (モード == 0) {
-        受信文字列 = "" + 受信文字列 + "V"
+        panic(4)
     } else {
         v = "V"
     }
@@ -48,9 +50,9 @@ function panic (回数: number) {
     pins.digitalWritePin(DigitalPin.P2, 1)
     for (let index = 0; index < 回数; index++) {
         LED点灯()
-        basic.pause(50)
+        basic.pause(100)
     }
-    pins.digitalWritePin(DigitalPin.P2, 1)
+    pins.digitalWritePin(DigitalPin.P2, 0)
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
 }
 radio.onReceivedString(function (receivedString) {
@@ -88,7 +90,7 @@ while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
 	
 }
 radio.setGroup(33)
-ideltime = 100
+ideltime = 50
 basic.forever(function () {
     if (input.runningTime() > limittime) {
         受信文字列 = ""
@@ -99,9 +101,13 @@ basic.forever(function () {
         strip.showColor(neopixel.colors(NeoPixelColors.Black))
     }
     if (受信文字列.includes("B")) {
+        input.setSoundThreshold(SoundThreshold.Loud, 255)
         pins.digitalWritePin(DigitalPin.P2, 1)
     } else {
         pins.digitalWritePin(DigitalPin.P2, 0)
+        if (モード != 1) {
+            input.setSoundThreshold(SoundThreshold.Loud, 115)
+        }
     }
     if (受信文字列.includes("V") && モード != 2) {
         panic(4)
