@@ -39,7 +39,7 @@ input.onGesture(Gesture.Shake, function () {
 })
 input.onSound(DetectedSound.Loud, function () {
     if (モード == 0) {
-        panic(4)
+        受信文字列 = "" + 受信文字列 + "V"
     } else {
         v = "V"
     }
@@ -67,8 +67,8 @@ function LED点灯 () {
 let b = ""
 let a = ""
 let limittime = 0
-let 受信文字列 = ""
 let v = ""
+let 受信文字列 = ""
 let ideltime = 0
 let モード = 0
 let strip: neopixel.Strip = null
@@ -84,6 +84,9 @@ if (input.buttonIsPressed(Button.A)) {
     モード = 0
 }
 ICON表示(モード)
+while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
+	
+}
 radio.setGroup(33)
 ideltime = 100
 basic.forever(function () {
