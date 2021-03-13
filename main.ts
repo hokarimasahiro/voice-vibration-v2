@@ -1,107 +1,121 @@
-radio.onReceivedNumber(function (receivedNumber) {
-    if (receivedNumber == 1) {
-        LEDバイブ(50)
-    } else if (receivedNumber == 2) {
-        LEDバイブ(50)
-        basic.pause(50)
-        LEDバイブ(50)
-    } else if (receivedNumber == 3) {
-        LEDバイブ(50)
-        basic.pause(50)
-        LEDバイブ(50)
-        basic.pause(50)
-        LEDバイブ(50)
-    } else if (receivedNumber == 4) {
-        LEDバイブ(100)
+function ICON表示 (No: number) {
+    if (No == 1) {
+        basic.showLeds(`
+            . . # . .
+            . . # . .
+            # . # . #
+            . # # # .
+            . . # . .
+            `)
+    } else if (No == 2) {
+        basic.showLeds(`
+            . . # . .
+            . # # # .
+            # . # . #
+            . . # . .
+            . . # . .
+            `)
+    } else if (No == 3) {
+        basic.showLeds(`
+            . # . # .
+            # # # # #
+            # # # # #
+            . # # # .
+            . . # . .
+            `)
     } else {
-    	
+        basic.showLeds(`
+            . . # . .
+            . # # # .
+            . . # . .
+            . # # # .
+            . . # . .
+            `)
     }
-})
-input.onButtonPressed(Button.A, function () {
-    if (モード == 0) {
-        LED点灯()
-        basic.showString("A")
-    } else if (モード == 1) {
-        radio.sendNumber(1)
-    } else if (モード == 2) {
-    	
-    }
-})
+}
 input.onGesture(Gesture.Shake, function () {
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
-    if (モード == 0) {
-        basic.showIcon(IconNames.Happy)
-    } else if (モード == 1) {
-        basic.showIcon(IconNames.Heart)
-    } else if (モード == 2) {
-        basic.showIcon(IconNames.SmallHeart)
-    }
+    ICON表示(モード)
 })
 input.onSound(DetectedSound.Loud, function () {
     if (モード == 0) {
-        input.setSoundThreshold(SoundThreshold.Loud, 256)
-        バイブ(100)
-        basic.pause(1000)
-        input.setSoundThreshold(SoundThreshold.Loud, 128)
-    } else if (モード == 1) {
-        radio.sendNumber(4)
-    } else if (モード == 2) {
-    	
+        panic(4)
+    } else {
+        v = "V"
     }
 })
-function LEDバイブ (mS: number) {
-    LED点灯()
-    バイブ(mS)
+function panic (回数: number) {
+    pins.digitalWritePin(DigitalPin.P2, 1)
+    for (let index = 0; index < 回数; index++) {
+        LED点灯()
+        basic.pause(50)
+    }
+    pins.digitalWritePin(DigitalPin.P2, 1)
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
 }
-input.onButtonPressed(Button.AB, function () {
-    if (モード == 0) {
-    	
-    } else if (モード == 1) {
-        radio.sendNumber(3)
-    } else if (モード == 2) {
-    	
-    }
-})
-input.onButtonPressed(Button.B, function () {
-    if (モード == 0) {
-        バイブ(50)
-        basic.showString("B")
-    } else if (モード == 1) {
-        radio.sendNumber(2)
-    } else if (モード == 2) {
-    	
-    }
+radio.onReceivedString(function (receivedString) {
+    受信文字列 = receivedString
+    limittime = input.runningTime() + ideltime
 })
 function LED点灯 () {
-    strip.setPixelColor((n + 0) % 4, neopixel.colors(NeoPixelColors.Red))
-    strip.setPixelColor((n + 1) % 4, neopixel.colors(NeoPixelColors.Orange))
-    strip.setPixelColor((n + 2) % 4, neopixel.colors(NeoPixelColors.Green))
-    strip.setPixelColor((n + 3) % 4, neopixel.colors(NeoPixelColors.Yellow))
-    strip.setPixelColor((n + 3) % 4, neopixel.colors(NeoPixelColors.Blue))
-    strip.setPixelColor((n + 3) % 4, neopixel.colors(NeoPixelColors.Violet))
+    strip.setPixelColor((input.runningTime() / 200 + 0) % 4, neopixel.colors(NeoPixelColors.Red))
+    strip.setPixelColor((input.runningTime() / 200 + 1) % 4, neopixel.colors(NeoPixelColors.Orange))
+    strip.setPixelColor((input.runningTime() / 200 + 2) % 4, neopixel.colors(NeoPixelColors.Green))
+    strip.setPixelColor((input.runningTime() / 200 + 3) % 4, neopixel.colors(NeoPixelColors.Yellow))
     strip.show()
-    n += 1
 }
-function バイブ (mS: number) {
-    pins.digitalWritePin(DigitalPin.P2, 1)
-    basic.pause(mS)
-    pins.digitalWritePin(DigitalPin.P2, 0)
-}
-let n = 0
+let b = ""
+let a = ""
+let limittime = 0
+let 受信文字列 = ""
+let v = ""
+let ideltime = 0
 let モード = 0
 let strip: neopixel.Strip = null
-strip = neopixel.create(DigitalPin.P1, 6, NeoPixelMode.RGB)
+strip = neopixel.create(DigitalPin.P1, 4, NeoPixelMode.RGB)
 strip.showColor(neopixel.colors(NeoPixelColors.Black))
 radio.setGroup(33)
 if (input.buttonIsPressed(Button.A)) {
+    input.setSoundThreshold(SoundThreshold.Loud, 255)
     モード = 1
-    basic.showIcon(IconNames.Heart)
 } else if (input.buttonIsPressed(Button.B)) {
     モード = 2
-    basic.showIcon(IconNames.SmallHeart)
 } else {
     モード = 0
-    basic.showIcon(IconNames.Happy)
 }
-n = 0
+ICON表示(モード)
+radio.setGroup(33)
+ideltime = 100
+basic.forever(function () {
+    if (input.runningTime() > limittime) {
+        受信文字列 = ""
+    }
+    if (受信文字列.includes("A")) {
+        LED点灯()
+    } else {
+        strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    }
+    if (受信文字列.includes("B")) {
+        pins.digitalWritePin(DigitalPin.P2, 1)
+    } else {
+        pins.digitalWritePin(DigitalPin.P2, 0)
+    }
+    if (受信文字列.includes("V") && モード != 2) {
+        panic(4)
+    }
+    if (input.buttonIsPressed(Button.A)) {
+        a = "A"
+    } else {
+        a = ""
+    }
+    if (input.buttonIsPressed(Button.B)) {
+        b = "B"
+    } else {
+        b = ""
+    }
+    if ("" + a + b + v != "") {
+        radio.sendString("" + a + b + v)
+        v = ""
+    }
+    basic.pause(10)
+})
