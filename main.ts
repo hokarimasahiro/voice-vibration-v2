@@ -33,27 +33,25 @@ function ICON表示 (No: number) {
             `)
     }
 }
-input.onGesture(Gesture.Shake, function () {
-    受信文字列 = ""
-    strip.showColor(neopixel.colors(NeoPixelColors.Black))
-    pins.digitalWritePin(DigitalPin.P2, 0)
-    ICON表示(モード)
-})
+function モーターON () {
+    input.setSoundThreshold(SoundThreshold.Loud, 255)
+    pins.digitalWritePin(DigitalPin.P2, 1)
+}
 input.onSound(DetectedSound.Loud, function () {
     if (モード == 0) {
-        panic(4)
-    } else {
+        受信文字列 = "" + 受信文字列 + "V"
+    } else if (モード == 2) {
         v = "V"
     }
 })
 function panic (回数: number) {
-    pins.digitalWritePin(DigitalPin.P2, 1)
+    モーターON()
     for (let index = 0; index < 回数; index++) {
         LED点灯()
         basic.pause(100)
     }
-    pins.digitalWritePin(DigitalPin.P2, 0)
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    モーターOFF(音量閾値)
 }
 radio.onReceivedString(function (receivedString) {
     受信文字列 = receivedString
@@ -66,6 +64,11 @@ function LED点灯 () {
     strip.setPixelColor((input.runningTime() / 200 + 3) % 4, neopixel.colors(NeoPixelColors.Yellow))
     strip.show()
 }
+function モーターOFF (閾値: number) {
+    pins.digitalWritePin(DigitalPin.P2, 0)
+    basic.pause(100)
+    input.setSoundThreshold(SoundThreshold.Loud, 閾値)
+}
 let b = ""
 let a = ""
 let limittime = 0
@@ -73,24 +76,28 @@ let v = ""
 let 受信文字列 = ""
 let ideltime = 0
 let モード = 0
+let 音量閾値 = 0
 let strip: neopixel.Strip = null
 strip = neopixel.create(DigitalPin.P1, 4, NeoPixelMode.RGB)
 strip.showColor(neopixel.colors(NeoPixelColors.Black))
 radio.setGroup(33)
 if (input.buttonIsPressed(Button.A)) {
-    input.setSoundThreshold(SoundThreshold.Loud, 255)
+    音量閾値 = 255
     モード = 1
 } else if (input.buttonIsPressed(Button.B)) {
+    音量閾値 = 128
     モード = 2
 } else {
+    音量閾値 = 128
     モード = 0
 }
+input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
+radio.setGroup(33)
+ideltime = 300
 ICON表示(モード)
 while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
 	
 }
-radio.setGroup(33)
-ideltime = 50
 basic.forever(function () {
     if (input.runningTime() > limittime) {
         受信文字列 = ""
@@ -101,13 +108,9 @@ basic.forever(function () {
         strip.showColor(neopixel.colors(NeoPixelColors.Black))
     }
     if (受信文字列.includes("B")) {
-        input.setSoundThreshold(SoundThreshold.Loud, 255)
-        pins.digitalWritePin(DigitalPin.P2, 1)
+        モーターON()
     } else {
-        pins.digitalWritePin(DigitalPin.P2, 0)
-        if (モード != 1) {
-            input.setSoundThreshold(SoundThreshold.Loud, 115)
-        }
+        モーターOFF(音量閾値)
     }
     if (受信文字列.includes("V") && モード != 2) {
         panic(4)
@@ -122,9 +125,9 @@ basic.forever(function () {
     } else {
         b = ""
     }
-    if ("" + a + b + v != "") {
+    if ("" + a + b + v != "" && モード != 1) {
         radio.sendString("" + a + b + v)
         v = ""
     }
-    basic.pause(10)
+    basic.pause(ideltime / 10)
 })
