@@ -33,18 +33,29 @@ function ICON表示 (No: number) {
             `)
     }
 }
+input.onButtonPressed(Button.A, function () {
+    音量閾値 += -10
+    led.plotBarGraph(
+    音量閾値,
+    255
+    )
+    basic.pause(1000)
+    basic.clearScreen()
+})
 function モーターON () {
-    input.setSoundThreshold(SoundThreshold.Loud, 255)
+    motoron = true
     pins.digitalWritePin(DigitalPin.P2, 1)
 }
 input.onSound(DetectedSound.Loud, function () {
     if (モード == 0) {
         LED点灯()
         モーターON()
-        motorlimit = input.runningTime() + 200
-    } else if (モード == 2) {
-        v = "V"
     }
+})
+input.onButtonPressed(Button.AB, function () {
+    strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    モーターOFF()
+    ICON表示(モード)
 })
 radio.onReceivedString(function (receivedString) {
     radiolimit = input.runningTime() + radioidel
@@ -54,11 +65,26 @@ radio.onReceivedString(function (receivedString) {
         strip.showColor(neopixel.colors(NeoPixelColors.Black))
     }
     if (モード != 2) {
-        if (receivedString.includes("B") && motorlimit == 0) {
+        if (receivedString.includes("B")) {
             モーターON()
         } else {
             モーターOFF()
         }
+    }
+})
+input.onButtonPressed(Button.B, function () {
+    音量閾値 += 10
+    led.plotBarGraph(
+    音量閾値,
+    255
+    )
+    basic.pause(1000)
+    basic.clearScreen()
+})
+input.onSound(DetectedSound.Quiet, function () {
+    if (モード == 0) {
+        strip.showColor(neopixel.colors(NeoPixelColors.Black))
+        モーターOFF()
     }
 })
 function LED点灯 () {
@@ -70,14 +96,11 @@ function LED点灯 () {
 }
 function モーターOFF () {
     pins.digitalWritePin(DigitalPin.P2, 0)
-    voicelimit = input.runningTime() + voiceidel
+    motoron = false
 }
 let 今回送信文字列 = ""
-let voicelimit = 0
-let v = ""
-let motorlimit = 0
+let motoron = false
 let radiolimit = 0
-let voiceidel = 0
 let radioidel = 0
 let モード = 0
 let 音量閾値 = 0
@@ -98,37 +121,30 @@ if (input.buttonIsPressed(Button.A)) {
 input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
 radio.setGroup(33)
 radioidel = 100
-voiceidel = 200
+let voiceidel = 200
 radiolimit = 0
-motorlimit = 0
+let motorlimit = 0
 let 前回送信文字列 = ""
+motoron = false
 ICON表示(モード)
 while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
 	
 }
 basic.forever(function () {
-    let vlimit = 0
     if (input.runningTime() > motorlimit) {
-        motorlimit = 0
         モーターOFF()
-        strip.showColor(neopixel.colors(NeoPixelColors.Black))
-    }
-    if (input.runningTime() > voicelimit) {
-        input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
     }
     今回送信文字列 = ""
-    if (input.buttonIsPressed(Button.A)) {
-        今回送信文字列 = "" + 今回送信文字列 + "A"
-    }
-    if (input.buttonIsPressed(Button.B)) {
-        今回送信文字列 = "" + 今回送信文字列 + "B"
-    }
     if (input.logoIsPressed()) {
         今回送信文字列 = "" + 今回送信文字列 + "AB"
     }
-    今回送信文字列 = "" + 今回送信文字列 + v
-    if (input.runningTime() > vlimit) {
-        v = ""
+    if (input.soundLevel() > 音量閾値) {
+        if (モード == 0) {
+            モーターON()
+            motorlimit = input.runningTime() + 50
+        } else if (モード == 2) {
+            今回送信文字列 = "" + 今回送信文字列 + "AB"
+        }
     }
     if (モード != 1) {
         if (今回送信文字列 != "" || 前回送信文字列 != "") {
