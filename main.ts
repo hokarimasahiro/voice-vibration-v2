@@ -39,23 +39,27 @@ function モーターON () {
 }
 input.onSound(DetectedSound.Loud, function () {
     if (モード == 0) {
-        受信文字列 = "" + 受信文字列 + "V"
+        LED点灯()
+        モーターON()
+        motorlimit = input.runningTime() + 200
     } else if (モード == 2) {
         v = "V"
     }
 })
-function panic (回数: number) {
-    モーターON()
-    for (let index = 0; index < 回数; index++) {
-        LED点灯()
-        basic.pause(100)
-    }
-    strip.showColor(neopixel.colors(NeoPixelColors.Black))
-    モーターOFF(音量閾値)
-}
 radio.onReceivedString(function (receivedString) {
-    受信文字列 = receivedString
-    limittime = input.runningTime() + ideltime
+    radiolimit = input.runningTime() + radioidel
+    if (receivedString.includes("A")) {
+        LED点灯()
+    } else {
+        strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    }
+    if (モード != 2) {
+        if (receivedString.includes("B") && motorlimit == 0) {
+            モーターON()
+        } else {
+            モーターOFF()
+        }
+    }
 })
 function LED点灯 () {
     strip.setPixelColor((input.runningTime() / 200 + 0) % 4, neopixel.colors(NeoPixelColors.Red))
@@ -64,17 +68,17 @@ function LED点灯 () {
     strip.setPixelColor((input.runningTime() / 200 + 3) % 4, neopixel.colors(NeoPixelColors.Yellow))
     strip.show()
 }
-function モーターOFF (閾値: number) {
+function モーターOFF () {
     pins.digitalWritePin(DigitalPin.P2, 0)
-    basic.pause(100)
-    input.setSoundThreshold(SoundThreshold.Loud, 閾値)
+    voicelimit = input.runningTime() + voiceidel
 }
-let b = ""
-let a = ""
-let limittime = 0
+let 今回送信文字列 = ""
+let voicelimit = 0
 let v = ""
-let 受信文字列 = ""
-let ideltime = 0
+let motorlimit = 0
+let radiolimit = 0
+let voiceidel = 0
+let radioidel = 0
 let モード = 0
 let 音量閾値 = 0
 let strip: neopixel.Strip = null
@@ -93,41 +97,44 @@ if (input.buttonIsPressed(Button.A)) {
 }
 input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
 radio.setGroup(33)
-ideltime = 300
+radioidel = 100
+voiceidel = 200
+radiolimit = 0
+motorlimit = 0
+let 前回送信文字列 = ""
 ICON表示(モード)
 while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
 	
 }
 basic.forever(function () {
-    if (input.runningTime() > limittime) {
-        受信文字列 = ""
-    }
-    if (受信文字列.includes("A")) {
-        LED点灯()
-    } else {
+    let vlimit = 0
+    if (input.runningTime() > motorlimit) {
+        motorlimit = 0
+        モーターOFF()
         strip.showColor(neopixel.colors(NeoPixelColors.Black))
     }
-    if (受信文字列.includes("B")) {
-        モーターON()
-    } else {
-        モーターOFF(音量閾値)
+    if (input.runningTime() > voicelimit) {
+        input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
     }
-    if (受信文字列.includes("V") && モード != 2) {
-        panic(4)
-    }
+    今回送信文字列 = ""
     if (input.buttonIsPressed(Button.A)) {
-        a = "A"
-    } else {
-        a = ""
+        今回送信文字列 = "" + 今回送信文字列 + "A"
     }
     if (input.buttonIsPressed(Button.B)) {
-        b = "B"
-    } else {
-        b = ""
+        今回送信文字列 = "" + 今回送信文字列 + "B"
     }
-    if ("" + a + b + v != "" && モード != 1) {
-        radio.sendString("" + a + b + v)
+    if (input.logoIsPressed()) {
+        今回送信文字列 = "" + 今回送信文字列 + "AB"
+    }
+    今回送信文字列 = "" + 今回送信文字列 + v
+    if (input.runningTime() > vlimit) {
         v = ""
     }
-    basic.pause(ideltime / 10)
+    if (モード != 1) {
+        if (今回送信文字列 != "" || 前回送信文字列 != "") {
+            radio.sendString(今回送信文字列)
+            前回送信文字列 = 今回送信文字列
+        }
+    }
+    basic.pause(radioidel / 10)
 })
