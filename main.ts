@@ -43,15 +43,11 @@ input.onButtonPressed(Button.A, function () {
     basic.clearScreen()
 })
 function モーターON () {
-    motoron = true
     pins.digitalWritePin(DigitalPin.P2, 1)
 }
-input.onSound(DetectedSound.Loud, function () {
-    if (モード == 0) {
-        LED点灯()
-        モーターON()
-    }
-})
+function LED消灯 () {
+    strip.showColor(neopixel.colors(NeoPixelColors.Black))
+}
 input.onButtonPressed(Button.AB, function () {
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
     モーターOFF()
@@ -61,7 +57,7 @@ radio.onReceivedString(function (receivedString) {
     if (receivedString.includes("A")) {
         LED点灯()
     } else {
-        strip.showColor(neopixel.colors(NeoPixelColors.Black))
+        LED消灯()
     }
     if (モード != 2) {
         if (receivedString.includes("B")) {
@@ -80,12 +76,6 @@ input.onButtonPressed(Button.B, function () {
     basic.pause(1000)
     basic.clearScreen()
 })
-input.onSound(DetectedSound.Quiet, function () {
-    if (モード == 5) {
-        strip.showColor(neopixel.colors(NeoPixelColors.Black))
-        モーターOFF()
-    }
-})
 function LED点灯 () {
     strip.setPixelColor((input.runningTime() / 200 + 0) % 4, neopixel.colors(NeoPixelColors.Red))
     strip.setPixelColor((input.runningTime() / 200 + 1) % 4, neopixel.colors(NeoPixelColors.Orange))
@@ -95,15 +85,13 @@ function LED点灯 () {
 }
 function モーターOFF () {
     pins.digitalWritePin(DigitalPin.P2, 0)
-    motoron = false
 }
 let 今回送信文字列 = ""
-let motoron = false
 let モード = 0
 let 音量閾値 = 0
 let strip: neopixel.Strip = null
 strip = neopixel.create(DigitalPin.P1, 4, NeoPixelMode.RGB)
-strip.showColor(neopixel.colors(NeoPixelColors.Black))
+LED消灯()
 radio.setGroup(33)
 if (input.buttonIsPressed(Button.A)) {
     音量閾値 = 255
@@ -119,15 +107,16 @@ input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
 radio.setGroup(33)
 let motorlimit = 0
 let 前回送信文字列 = ""
-motoron = false
+let motoron = false
 ICON表示(モード)
 while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
 	
 }
 basic.forever(function () {
-    if (input.runningTime() > motorlimit) {
-        strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    if (motoron && input.runningTime() > motorlimit) {
         モーターOFF()
+        LED消灯()
+        motoron = false
     }
     今回送信文字列 = ""
     if (input.logoIsPressed()) {
@@ -136,6 +125,7 @@ basic.forever(function () {
     if (input.soundLevel() > 音量閾値) {
         if (モード == 0) {
             モーターON()
+            motoron = true
             motorlimit = input.runningTime() + 50
         } else if (モード == 2) {
             今回送信文字列 = "" + 今回送信文字列 + "AB"
