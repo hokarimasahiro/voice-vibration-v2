@@ -58,7 +58,6 @@ input.onButtonPressed(Button.AB, function () {
     ICON表示(モード)
 })
 radio.onReceivedString(function (receivedString) {
-    radiolimit = input.runningTime() + radioidel
     if (receivedString.includes("A")) {
         LED点灯()
     } else {
@@ -100,8 +99,6 @@ function モーターOFF () {
 }
 let 今回送信文字列 = ""
 let motoron = false
-let radiolimit = 0
-let radioidel = 0
 let モード = 0
 let 音量閾値 = 0
 let strip: neopixel.Strip = null
@@ -120,9 +117,6 @@ if (input.buttonIsPressed(Button.A)) {
 }
 input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
 radio.setGroup(33)
-radioidel = 100
-let voiceidel = 200
-radiolimit = 0
 let motorlimit = 0
 let 前回送信文字列 = ""
 motoron = false
@@ -152,5 +146,5 @@ basic.forever(function () {
             前回送信文字列 = 今回送信文字列
         }
     }
-    basic.pause(radioidel / 10)
+    basic.pause(0 / 10)
 })
