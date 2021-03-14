@@ -81,7 +81,7 @@ input.onButtonPressed(Button.B, function () {
     basic.clearScreen()
 })
 input.onSound(DetectedSound.Quiet, function () {
-    if (モード == 0) {
+    if (モード == 5) {
         strip.showColor(neopixel.colors(NeoPixelColors.Black))
         モーターOFF()
     }
@@ -126,6 +126,7 @@ while (input.buttonIsPressed(Button.A) || input.buttonIsPressed(Button.B)) {
 }
 basic.forever(function () {
     if (input.runningTime() > motorlimit) {
+        strip.showColor(neopixel.colors(NeoPixelColors.Black))
         モーターOFF()
     }
     今回送信文字列 = ""
