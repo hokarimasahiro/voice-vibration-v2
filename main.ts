@@ -124,6 +124,7 @@ basic.forever(function () {
     }
     if (input.soundLevel() > 音量閾値) {
         if (モード == 0) {
+            LED点灯()
             モーターON()
             motoron = true
             motorlimit = input.runningTime() + 50
