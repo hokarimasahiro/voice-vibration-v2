@@ -49,7 +49,7 @@ function LED消灯 () {
     strip.showColor(neopixel.colors(NeoPixelColors.Black))
 }
 input.onButtonPressed(Button.AB, function () {
-    strip.showColor(neopixel.colors(NeoPixelColors.Black))
+    LED消灯()
     モーターOFF()
     ICON表示(モード)
 })
@@ -103,7 +103,6 @@ if (input.buttonIsPressed(Button.A)) {
     音量閾値 = 128
     モード = 0
 }
-input.setSoundThreshold(SoundThreshold.Loud, 音量閾値)
 radio.setGroup(33)
 let motorlimit = 0
 let 前回送信文字列 = ""
